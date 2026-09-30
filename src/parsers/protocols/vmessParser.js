@@ -42,7 +42,7 @@ export function parseVmess(url) {
 
     const tlsEnabled = vmessConfig.tls && vmessConfig.tls !== '' && vmessConfig.tls !== 'none';
     if (tlsEnabled) {
-        const serverName = vmessConfig.sni || vmessConfig.host || undefined;
+        const serverName = vmessConfig.sni || vmessConfig.host || vmessConfig.add || undefined;
         tls = {
             enabled: true,
             ...(serverName ? { server_name: serverName } : {}),
@@ -63,10 +63,11 @@ export function parseVmess(url) {
     }
 
     if (networkType === 'ws') {
+        const wsHost = vmessConfig.host || vmessConfig.sni || undefined;
         transport = {
             type: 'ws',
             path: vmessConfig.path,
-            headers: { 'host': vmessConfig.host ? vmessConfig.host : vmessConfig.sni }
+            ...(wsHost ? { headers: { 'host': wsHost } } : {})
         };
     } else if ((networkType === 'tcp' && transportType === 'http') || networkType === 'http') {
         const method = vmessConfig.method || 'GET';

@@ -140,4 +140,21 @@ describe('Issue #297: sing-box outbounds must not carry a top-level `network`', 
         expect(parsed.tls.utls?.fingerprint).toBe('chrome');
         expect(parsed.tls.alpn).toEqual(['h2,http/1.1']);
     });
+
+    it('parseVmess should fallback server_name to add when both sni and host are empty, and not emit empty ws host header', () => {
+        const vmessWsEmptyHost = {
+            ...vmessWsConfig,
+            ps: 'VMess-EmptyHost-Test',
+            add: '123.test.org',
+            sni: '',
+            host: ''
+        };
+        const url = 'vmess://' + Buffer.from(JSON.stringify(vmessWsEmptyHost)).toString('base64');
+        const parsed = parseVmess(url);
+
+        expect(parsed.tls.enabled).toBe(true);
+        expect(parsed.tls.server_name).toBe('123.test.org');
+        expect(parsed.transport?.type).toBe('ws');
+        expect(parsed.transport?.headers).toBeUndefined();
+    });
 });
