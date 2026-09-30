@@ -508,6 +508,94 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
         }
     }
 
+    sanitizeDnsConfig() {
+        if (this.singboxVersion === '1.11') {
+            return;
+        }
+
+        if (!this.config?.dns) {
+            return;
+        }
+
+        const legacyFakeip = this.config.dns.fakeip;
+        const inet4_range = legacyFakeip?.inet4_range || '198.18.0.0/15';
+        const inet6_range = legacyFakeip?.inet6_range || 'fc00::/18';
+
+        if (Array.isArray(this.config.dns.servers)) {
+            let hasFakeipServer = false;
+            this.config.dns.servers = this.config.dns.servers.map(server => {
+                if (!server || typeof server !== 'object') return server;
+
+                // Handle fakeip server migration
+                if (server.type === 'fakeip' || server.address === 'fakeip' || server.tag === 'dns_fakeip') {
+                    hasFakeipServer = true;
+                    const modernized = {
+                        type: 'fakeip',
+                        tag: server.tag || 'dns_fakeip',
+                        inet4_range: server.inet4_range || inet4_range,
+                        inet6_range: server.inet6_range || inet6_range
+                    };
+                    return modernized;
+                }
+
+                // If server is in legacy format (has address but no type)
+                if (!server.type && typeof server.address === 'string') {
+                    const addr = server.address;
+                    const modernized = { ...server };
+                    delete modernized.address;
+
+                    if (addr.startsWith('tls://')) {
+                        modernized.type = 'tls';
+                        modernized.server = addr.slice(6);
+                    } else if (addr.startsWith('https://')) {
+                        modernized.type = 'https';
+                        modernized.server = addr.replace(/^https:\/\//, '').split('/')[0];
+                        if (modernized.address_resolver) {
+                            modernized.domain_resolver = modernized.address_resolver;
+                            delete modernized.address_resolver;
+                        }
+                    } else if (addr.startsWith('tcp://')) {
+                        modernized.type = 'tcp';
+                        modernized.server = addr.slice(6);
+                    } else if (addr.startsWith('udp://')) {
+                        modernized.type = 'udp';
+                        modernized.server = addr.slice(6);
+                    } else {
+                        modernized.type = 'udp';
+                        modernized.server = addr;
+                    }
+                    return modernized;
+                }
+
+                return server;
+            });
+
+            // If legacyFakeip was present but no fakeip server in servers list, add one
+            if (legacyFakeip && !hasFakeipServer) {
+                this.config.dns.servers.push({
+                    type: 'fakeip',
+                    tag: 'dns_fakeip',
+                    inet4_range,
+                    inet6_range
+                });
+            }
+        }
+
+        // Always delete legacy dns.fakeip on modern tiers (1.12+)
+        delete this.config.dns.fakeip;
+        delete this.config.dns.independent_cache;
+
+        // Ensure route.default_domain_resolver is set on modern tiers (1.12+)
+        // sing-box 1.14.0 throws FATAL error if missing
+        if (!this.config.route) {
+            this.config.route = {};
+        }
+        if (!this.config.route.default_domain_resolver) {
+            const resolverServer = (this.config.dns?.servers || []).find(s => s.tag === 'dns_resolver' || (s.type === 'udp' && !s.detour));
+            this.config.route.default_domain_resolver = resolverServer?.tag || 'dns_resolver';
+        }
+    }
+
     sanitizeLegacySpecialOutbounds() {
         const legacyTags = new Set(
             (this.config.outbounds || [])
@@ -604,6 +692,7 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
         // Validate outbounds: fill empty urltest groups with all proxies
         this.validateOutbounds();
         this.sanitizeLegacySpecialOutbounds();
+        this.sanitizeDnsConfig();
 
         const attachProtocolIfNeeded = (entry, rule) => {
             if (Array.isArray(rule?.protocol) && rule.protocol.length > 0) {
