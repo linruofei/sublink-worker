@@ -393,9 +393,13 @@ export const formLogicFn = (t) => {
 
                     const queryString = params.toString();
 
+                    // Modern sing-box (1.14+) requires http_clients for remote rule-sets
+                    const singboxParams = new URLSearchParams(params);
+                    singboxParams.append('singbox_version', '1.14');
+
                     this.generatedLinks = {
                         xray: origin + '/xray?' + queryString,
-                        singbox: origin + '/singbox?' + queryString,
+                        singbox: origin + '/singbox?' + singboxParams.toString(),
                         clash: origin + '/clash?' + queryString,
                         surge: origin + '/surge?' + queryString
                     };

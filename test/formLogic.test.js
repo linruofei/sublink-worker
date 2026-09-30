@@ -32,4 +32,32 @@ describe('formLogic toString fix', () => {
     expect(typeof data.toggleAccordion).toBe('function');
     expect(data.showAdvanced).toBe(false);
   });
+
+  it('submitForm generates singbox link with default singbox_version=1.14', async () => {
+    const fakeWindow = {
+      APP_TRANSLATIONS: {},
+      PREDEFINED_RULE_SETS: {},
+      location: { origin: 'https://example.com', search: '', pathname: '/', hash: '' },
+      history: { replaceState: () => {} },
+      setTimeout: (fn) => fn()
+    };
+    const fakeDocument = {
+      querySelector: () => null
+    };
+
+    const fn = new Function('window', 'document', '(' + formLogicFn.toString() + ')(); return window;');
+    const result = fn(fakeWindow, fakeDocument);
+    const data = result.formData();
+    data.input = 'vless://12345678-1234-1234-1234-123456789abc@1.1.1.1:443#Test';
+    data.selectedRules = ['minimal'];
+
+    await data.submitForm();
+
+    expect(data.generatedLinks).toBeDefined();
+    const singboxUrl = new URL(data.generatedLinks.singbox);
+    expect(singboxUrl.searchParams.get('singbox_version')).toBe('1.14');
+
+    const clashUrl = new URL(data.generatedLinks.clash);
+    expect(clashUrl.searchParams.get('singbox_version')).toBeNull();
+  });
 });
