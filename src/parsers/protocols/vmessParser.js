@@ -42,11 +42,24 @@ export function parseVmess(url) {
 
     const tlsEnabled = vmessConfig.tls && vmessConfig.tls !== '' && vmessConfig.tls !== 'none';
     if (tlsEnabled) {
+        const serverName = vmessConfig.sni || vmessConfig.host || undefined;
         tls = {
             enabled: true,
-            server_name: vmessConfig.sni,
+            ...(serverName ? { server_name: serverName } : {}),
             insecure: vmessConfig['skip-cert-verify'] || false
         };
+        if (vmessConfig.fp) {
+            tls.utls = {
+                enabled: true,
+                fingerprint: vmessConfig.fp
+            };
+        }
+        if (vmessConfig.alpn) {
+            const alpnArray = normalizeArray(vmessConfig.alpn);
+            if (alpnArray && alpnArray.length > 0) {
+                tls.alpn = alpnArray;
+            }
+        }
     }
 
     if (networkType === 'ws') {

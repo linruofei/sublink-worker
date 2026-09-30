@@ -152,6 +152,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
                     alterId: proxy.alter_id ?? 0,
                     cipher: proxy.security,
                     tls: proxy.tls?.enabled || false,
+                    'client-fingerprint': proxy.tls?.utls?.fingerprint,
                     servername: proxy.tls?.server_name || '',
                     'skip-cert-verify': !!proxy.tls?.insecure,
                     network: proxy.transport?.type || proxy.network || 'tcp',
@@ -184,7 +185,8 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
                             host: proxy.transport.host
                         }
                         : undefined,
-                    udp: getClashUdpValue(proxy)
+                    udp: getClashUdpValue(proxy),
+                    ...(proxy.tls?.alpn || proxy.alpn ? { alpn: proxy.tls?.alpn || proxy.alpn } : {})
                 };
             case 'vless':
                 return {

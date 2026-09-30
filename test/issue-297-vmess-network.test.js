@@ -122,4 +122,22 @@ describe('Issue #297: sing-box outbounds must not carry a top-level `network`', 
         expect(vmessProxy.network).toBeUndefined();
         expect(vmessProxy.transport?.type).toBe('ws');
     });
+
+    it('parseVmess should fallback server_name to host when sni is empty and support fp/alpn', () => {
+        const vmessWsFallback = {
+            ...vmessWsConfig,
+            ps: 'VMess-Fallback-Test',
+            sni: '',
+            host: 'fallback.host.com',
+            fp: 'chrome',
+            alpn: 'h2,http/1.1'
+        };
+        const url = 'vmess://' + Buffer.from(JSON.stringify(vmessWsFallback)).toString('base64');
+        const parsed = parseVmess(url);
+
+        expect(parsed.tls.enabled).toBe(true);
+        expect(parsed.tls.server_name).toBe('fallback.host.com');
+        expect(parsed.tls.utls?.fingerprint).toBe('chrome');
+        expect(parsed.tls.alpn).toEqual(['h2,http/1.1']);
+    });
 });
