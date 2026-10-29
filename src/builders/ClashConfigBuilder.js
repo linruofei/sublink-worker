@@ -207,6 +207,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
                     'reality-opts': proxy.tls?.reality?.enabled ? {
                         'public-key': proxy.tls.reality.public_key,
                         'short-id': proxy.tls.reality.short_id,
+                        ...(proxy.tls.reality.spider_x ? { 'spider-x': proxy.tls.reality.spider_x } : {})
                     } : undefined,
                     'grpc-opts': proxy.transport?.type === 'grpc' ? {
                         'grpc-service-name': proxy.transport.service_name,
@@ -257,6 +258,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
                     'reality-opts': proxy.tls?.reality?.enabled ? {
                         'public-key': proxy.tls.reality.public_key,
                         'short-id': proxy.tls.reality.short_id,
+                        ...(proxy.tls.reality.spider_x ? { 'spider-x': proxy.tls.reality.spider_x } : {})
                     } : undefined,
                     'grpc-opts': proxy.transport?.type === 'grpc' ? {
                         'grpc-service-name': proxy.transport.service_name,

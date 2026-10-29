@@ -299,10 +299,12 @@ export function createTlsConfig(params) {
 			// },
 		};
 		if (params.security === 'reality') {
+			const spiderX = params.spx || params['spider-x'] || params.spider_x;
 			tls.reality = {
 				enabled: true,
 				public_key: params.pbk,
 				short_id: params.sid,
+				...(spiderX ? { spider_x: spiderX } : {}),
 			};
 		}
 	}
