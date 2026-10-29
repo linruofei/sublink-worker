@@ -300,11 +300,14 @@ export function createTlsConfig(params) {
 		};
 		if (params.security === 'reality') {
 			const spiderX = params.spx || params['spider-x'] || params.spider_x;
+			const mlkemParam = params['support-x25519mlkem768'] ?? params.support_x25519mlkem768 ?? params.mlkem ?? params.mlkem768 ?? params.pq;
+			const supportMlkem = parseBool(mlkemParam, true);
 			tls.reality = {
 				enabled: true,
 				public_key: params.pbk,
 				short_id: params.sid,
 				...(spiderX ? { spider_x: spiderX } : {}),
+				...(supportMlkem !== undefined ? { support_x25519mlkem768: supportMlkem } : {}),
 			};
 		}
 	}

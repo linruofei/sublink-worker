@@ -1,3 +1,5 @@
+import { parseBool } from '../utils.js';
+
 export function convertYamlProxyToObject(p) {
     if (!p || typeof p !== 'object' || !p.type) return null;
     const type = String(p.type).toLowerCase();
@@ -82,7 +84,10 @@ export function convertYamlProxyToObject(p) {
                                 enabled: true,
                                 public_key: reality['public-key'],
                                 short_id: reality['short-id'],
-                                ...(reality['spider-x'] || reality.spider_x ? { spider_x: reality['spider-x'] || reality.spider_x } : {})
+                                ...(reality['spider-x'] || reality.spider_x ? { spider_x: reality['spider-x'] || reality.spider_x } : {}),
+                                ...(reality['support-x25519mlkem768'] !== undefined || reality.support_x25519mlkem768 !== undefined || reality.mlkem !== undefined
+                                    ? { support_x25519mlkem768: parseBool(reality['support-x25519mlkem768'] ?? reality.support_x25519mlkem768 ?? reality.mlkem, true) }
+                                    : { support_x25519mlkem768: true })
                             }
                         }
                         : {})
@@ -144,7 +149,10 @@ export function convertYamlProxyToObject(p) {
                                 enabled: true,
                                 public_key: reality['public-key'],
                                 short_id: reality['short-id'],
-                                ...(reality['spider-x'] || reality.spider_x ? { spider_x: reality['spider-x'] || reality.spider_x } : {})
+                                ...(reality['spider-x'] || reality.spider_x ? { spider_x: reality['spider-x'] || reality.spider_x } : {}),
+                                ...(reality['support-x25519mlkem768'] !== undefined || reality.support_x25519mlkem768 !== undefined || reality.mlkem !== undefined
+                                    ? { support_x25519mlkem768: parseBool(reality['support-x25519mlkem768'] ?? reality.support_x25519mlkem768 ?? reality.mlkem, true) }
+                                    : { support_x25519mlkem768: true })
                             }
                         }
                         : {})

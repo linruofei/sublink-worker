@@ -9,7 +9,12 @@ export function parseVless(url) {
     if (tls.reality) {
         tls.utls = {
             enabled: true,
-            fingerprint: 'chrome'
+            fingerprint: params.fp || 'chrome'
+        };
+    } else if (params.fp) {
+        tls.utls = {
+            enabled: true,
+            fingerprint: params.fp
         };
     }
     const transport = params.type !== 'tcp' ? createTransportConfig(params) : undefined;

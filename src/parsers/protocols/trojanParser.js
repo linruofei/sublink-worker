@@ -9,6 +9,17 @@ export function parseTrojan(url) {
     // Trojan requires TLS by protocol design
     if (!params.security) params.security = 'tls';
     const tls = createTlsConfig(params);
+    if (tls.reality) {
+        tls.utls = {
+            enabled: true,
+            fingerprint: params.fp || 'chrome'
+        };
+    } else if (params.fp) {
+        tls.utls = {
+            enabled: true,
+            fingerprint: params.fp
+        };
+    }
     const transport = params.type !== 'tcp' ? createTransportConfig(params) : undefined;
     return {
         type: 'trojan',
